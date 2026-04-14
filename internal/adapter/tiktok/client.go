@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/edward-/publish-social-network/internal/domain"
@@ -14,10 +15,12 @@ import (
 
 // Client is a TikTok Content Posting API client.
 type Client struct {
-	accessToken string
-	clientKey   string
-	httpClient  *http.Client
-	baseURL     string
+	accessToken  string
+	refreshToken string
+	clientKey    string
+	httpClient   *http.Client
+	baseURL      string
+	mu           sync.RWMutex
 }
 
 // NewClient creates a new TikTok API client.
@@ -30,6 +33,33 @@ func NewClient(accessToken, clientKey string) *Client {
 		},
 		baseURL: "https://open.tiktokapis.com/v2",
 	}
+}
+
+// NewClientWithRefresh creates a new TikTok API client with refresh token support.
+func NewClientWithRefresh(accessToken, refreshToken, clientKey string) *Client {
+	return &Client{
+		accessToken:  accessToken,
+		refreshToken: refreshToken,
+		clientKey:    clientKey,
+		httpClient: &http.Client{
+			Timeout: 120 * time.Second,
+		},
+		baseURL: "https://open.tiktokapis.com/v2",
+	}
+}
+
+// SetAccessToken updates the access token (e.g., after refresh).
+func (c *Client) SetAccessToken(token string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.accessToken = token
+}
+
+// GetAccessToken returns the current access token.
+func (c *Client) GetAccessToken() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.accessToken
 }
 
 // InitVideoResponse represents the response from initializing a video upload.

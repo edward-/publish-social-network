@@ -20,8 +20,10 @@ type Config struct {
 
 // FacebookConfig holds Facebook API configuration.
 type FacebookConfig struct {
-	PageID      string
-	AccessToken string
+	PageID       string
+	AccessToken  string
+	ClientID     string
+	ClientSecret string
 }
 
 // InstagramConfig holds Instagram API configuration.
@@ -32,8 +34,10 @@ type InstagramConfig struct {
 
 // TikTokConfig holds TikTok API configuration.
 type TikTokConfig struct {
-	AccessToken string
-	ClientKey   string
+	AccessToken  string
+	RefreshToken string
+	ClientKey    string
+	ClientSecret string
 }
 
 // YouTubeConfig holds YouTube API configuration.
@@ -53,16 +57,20 @@ func Load(envPath, profile string) (*Config, error) {
 	cfg := &Config{
 		Profile: profile,
 		Facebook: FacebookConfig{
-			PageID:      getEnv("FACEBOOK_PAGE_ID", profile),
-			AccessToken: getEnv("FACEBOOK_ACCESS_TOKEN", profile),
+			PageID:       getEnv("FACEBOOK_PAGE_ID", profile),
+			AccessToken:  getEnv("FACEBOOK_ACCESS_TOKEN", profile),
+			ClientID:     getEnv("FACEBOOK_CLIENT_ID", profile),
+			ClientSecret: getEnv("FACEBOOK_CLIENT_SECRET", profile),
 		},
 		Instagram: InstagramConfig{
 			UserID:      getEnv("INSTAGRAM_USER_ID", profile),
 			AccessToken: getEnv("INSTAGRAM_ACCESS_TOKEN", profile),
 		},
 		TikTok: TikTokConfig{
-			AccessToken: getEnv("TIKTOK_ACCESS_TOKEN", profile),
-			ClientKey:   getEnv("TIKTOK_CLIENT_KEY", profile),
+			AccessToken:  getEnv("TIKTOK_ACCESS_TOKEN", profile),
+			RefreshToken: getEnv("TIKTOK_REFRESH_TOKEN", profile),
+			ClientKey:    getEnv("TIKTOK_CLIENT_KEY", profile),
+			ClientSecret: getEnv("TIKTOK_CLIENT_SECRET", profile),
 		},
 		YouTube: YouTubeConfig{
 			ClientID:     getEnv("YOUTUBE_CLIENT_ID", profile),
