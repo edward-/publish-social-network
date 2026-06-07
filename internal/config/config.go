@@ -15,7 +15,6 @@ type Config struct {
 	Instagram InstagramConfig
 	TikTok    TikTokConfig
 	YouTube   YouTubeConfig
-	Profile   string // The profile used to load this config
 }
 
 // FacebookConfig holds Facebook API configuration.
@@ -48,38 +47,33 @@ type YouTubeConfig struct {
 }
 
 // Load reads configuration from the .env file and environment variables.
-// The profile parameter selects which account to use (e.g., "work", "personal").
-// An empty profile or "default" uses the base keys without suffix.
-func Load(envPath, profile string) (*Config, error) {
+func Load(envPath string) (*Config, error) {
 	// Load .env file if it exists
 	_ = godotenv.Load(envPath)
 
-	cfg := &Config{
-		Profile: profile,
+	return &Config{
 		Facebook: FacebookConfig{
-			PageID:       getEnv("FACEBOOK_PAGE_ID", profile),
-			AccessToken:  getEnv("FACEBOOK_ACCESS_TOKEN", profile),
-			ClientID:     getEnv("FACEBOOK_CLIENT_ID", profile),
-			ClientSecret: getEnv("FACEBOOK_CLIENT_SECRET", profile),
+			PageID:       os.Getenv("FACEBOOK_PAGE_ID"),
+			AccessToken:  os.Getenv("FACEBOOK_ACCESS_TOKEN"),
+			ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+			ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
 		},
 		Instagram: InstagramConfig{
-			UserID:      getEnv("INSTAGRAM_USER_ID", profile),
-			AccessToken: getEnv("INSTAGRAM_ACCESS_TOKEN", profile),
+			UserID:      os.Getenv("INSTAGRAM_USER_ID"),
+			AccessToken: os.Getenv("INSTAGRAM_ACCESS_TOKEN"),
 		},
 		TikTok: TikTokConfig{
-			AccessToken:  getEnv("TIKTOK_ACCESS_TOKEN", profile),
-			RefreshToken: getEnv("TIKTOK_REFRESH_TOKEN", profile),
-			ClientKey:    getEnv("TIKTOK_CLIENT_KEY", profile),
-			ClientSecret: getEnv("TIKTOK_CLIENT_SECRET", profile),
+			AccessToken:  os.Getenv("TIKTOK_ACCESS_TOKEN"),
+			RefreshToken: os.Getenv("TIKTOK_REFRESH_TOKEN"),
+			ClientKey:    os.Getenv("TIKTOK_CLIENT_KEY"),
+			ClientSecret: os.Getenv("TIKTOK_CLIENT_SECRET"),
 		},
 		YouTube: YouTubeConfig{
-			ClientID:     getEnv("YOUTUBE_CLIENT_ID", profile),
-			ClientSecret: getEnv("YOUTUBE_CLIENT_SECRET", profile),
-			RefreshToken: getEnv("YOUTUBE_REFRESH_TOKEN", profile),
+			ClientID:     os.Getenv("YOUTUBE_CLIENT_ID"),
+			ClientSecret: os.Getenv("YOUTUBE_CLIENT_SECRET"),
+			RefreshToken: os.Getenv("YOUTUBE_REFRESH_TOKEN"),
 		},
-	}
-
-	return cfg, nil
+	}, nil
 }
 
 // Validate checks that all required fields are present for the requested platforms.
@@ -90,31 +84,31 @@ func (c *Config) Validate(requestedPlatforms []string) error {
 		switch strings.ToLower(platform) {
 		case "facebook":
 			if c.Facebook.PageID == "" {
-				missing = append(missing, envKey("FACEBOOK_PAGE_ID", c.Profile))
+				missing = append(missing, "FACEBOOK_PAGE_ID")
 			}
 			if c.Facebook.AccessToken == "" {
-				missing = append(missing, envKey("FACEBOOK_ACCESS_TOKEN", c.Profile))
+				missing = append(missing, "FACEBOOK_ACCESS_TOKEN")
 			}
 		case "instagram":
 			if c.Instagram.UserID == "" {
-				missing = append(missing, envKey("INSTAGRAM_USER_ID", c.Profile))
+				missing = append(missing, "INSTAGRAM_USER_ID")
 			}
 			if c.Instagram.AccessToken == "" {
-				missing = append(missing, envKey("INSTAGRAM_ACCESS_TOKEN", c.Profile))
+				missing = append(missing, "INSTAGRAM_ACCESS_TOKEN")
 			}
 		case "tiktok":
 			if c.TikTok.AccessToken == "" {
-				missing = append(missing, envKey("TIKTOK_ACCESS_TOKEN", c.Profile))
+				missing = append(missing, "TIKTOK_ACCESS_TOKEN")
 			}
 		case "youtube":
 			if c.YouTube.ClientID == "" {
-				missing = append(missing, envKey("YOUTUBE_CLIENT_ID", c.Profile))
+				missing = append(missing, "YOUTUBE_CLIENT_ID")
 			}
 			if c.YouTube.ClientSecret == "" {
-				missing = append(missing, envKey("YOUTUBE_CLIENT_SECRET", c.Profile))
+				missing = append(missing, "YOUTUBE_CLIENT_SECRET")
 			}
 			if c.YouTube.RefreshToken == "" {
-				missing = append(missing, envKey("YOUTUBE_REFRESH_TOKEN", c.Profile))
+				missing = append(missing, "YOUTUBE_REFRESH_TOKEN")
 			}
 		}
 	}
@@ -129,10 +123,10 @@ func (c *Config) Validate(requestedPlatforms []string) error {
 // ValidateFacebook returns an error if Facebook config is invalid.
 func (c *Config) ValidateFacebook() error {
 	if c.Facebook.PageID == "" {
-		return fmt.Errorf("%s is required", envKey("FACEBOOK_PAGE_ID", c.Profile))
+		return fmt.Errorf("FACEBOOK_PAGE_ID is required")
 	}
 	if c.Facebook.AccessToken == "" {
-		return fmt.Errorf("%s is required", envKey("FACEBOOK_ACCESS_TOKEN", c.Profile))
+		return fmt.Errorf("FACEBOOK_ACCESS_TOKEN is required")
 	}
 	return nil
 }
@@ -140,10 +134,10 @@ func (c *Config) ValidateFacebook() error {
 // ValidateInstagram returns an error if Instagram config is invalid.
 func (c *Config) ValidateInstagram() error {
 	if c.Instagram.UserID == "" {
-		return fmt.Errorf("%s is required", envKey("INSTAGRAM_USER_ID", c.Profile))
+		return fmt.Errorf("INSTAGRAM_USER_ID is required")
 	}
 	if c.Instagram.AccessToken == "" {
-		return fmt.Errorf("%s is required", envKey("INSTAGRAM_ACCESS_TOKEN", c.Profile))
+		return fmt.Errorf("INSTAGRAM_ACCESS_TOKEN is required")
 	}
 	return nil
 }
@@ -151,7 +145,7 @@ func (c *Config) ValidateInstagram() error {
 // ValidateTikTok returns an error if TikTok config is invalid.
 func (c *Config) ValidateTikTok() error {
 	if c.TikTok.AccessToken == "" {
-		return fmt.Errorf("%s is required", envKey("TIKTOK_ACCESS_TOKEN", c.Profile))
+		return fmt.Errorf("TIKTOK_ACCESS_TOKEN is required")
 	}
 	return nil
 }
@@ -159,34 +153,13 @@ func (c *Config) ValidateTikTok() error {
 // ValidateYouTube returns an error if YouTube config is invalid.
 func (c *Config) ValidateYouTube() error {
 	if c.YouTube.ClientID == "" {
-		return fmt.Errorf("%s is required", envKey("YOUTUBE_CLIENT_ID", c.Profile))
+		return fmt.Errorf("YOUTUBE_CLIENT_ID is required")
 	}
 	if c.YouTube.ClientSecret == "" {
-		return fmt.Errorf("%s is required", envKey("YOUTUBE_CLIENT_SECRET", c.Profile))
+		return fmt.Errorf("YOUTUBE_CLIENT_SECRET is required")
 	}
 	if c.YouTube.RefreshToken == "" {
-		return fmt.Errorf("%s is required", envKey("YOUTUBE_REFRESH_TOKEN", c.Profile))
+		return fmt.Errorf("YOUTUBE_REFRESH_TOKEN is required")
 	}
 	return nil
-}
-
-// getEnv reads an environment variable, returning an empty string if not set.
-// If profile is non-empty and not "default", it first tries the suffixed version
-// (e.g., "FACEBOOK_PAGE_ID_WORK") before falling back to the base key.
-func getEnv(key, profile string) string {
-	if profile != "" && profile != "default" {
-		suffix := "_" + strings.ToUpper(profile)
-		if val := os.Getenv(key + suffix); val != "" {
-			return val
-		}
-	}
-	return os.Getenv(key)
-}
-
-// envKey returns the environment variable key with profile suffix if applicable.
-func envKey(key, profile string) string {
-	if profile != "" && profile != "default" {
-		return key + "_" + strings.ToUpper(profile)
-	}
-	return key
 }

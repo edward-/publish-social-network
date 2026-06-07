@@ -104,34 +104,13 @@ YOUTUBE_CLIENT_SECRET=GOCSPX-xxx
 YOUTUBE_REFRESH_TOKEN=1//xxx
 ```
 
-### 3. Multi-Account Support (Optional)
-If you have multiple accounts per platform, configure them with profile suffixes:
+### 3. Run the publisher
+
+Once your `.env` is populated:
 
 ```bash
-# Default account
-FACEBOOK_PAGE_ID=default_id
-FACEBOOK_ACCESS_TOKEN=default_token
-
-# Work account
-FACEBOOK_PAGE_ID_WORK=work_id
-FACEBOOK_ACCESS_TOKEN_WORK=work_token
-
-# Personal account
-FACEBOOK_PAGE_ID_PERSONAL=personal_id
-FACEBOOK_ACCESS_TOKEN_PERSONAL=personal_token
-```
-
-Then use the `--profile` flag to select which account to use:
-
-```bash
-# Use default account
+go build -o publisher ./cmd/publisher
 ./publisher publish --caption "Hello!" --platforms facebook
-
-# Use work account
-./publisher publish --caption "Hello from work!" --platforms facebook --profile work
-
-# Use personal account
-./publisher publish --caption "Hello from personal!" --platforms facebook --profile personal
 ```
 
 ## Building
@@ -192,7 +171,6 @@ go run ./cmd/publisher [command]
 | `--platforms` | `-p` | Comma-separated: `facebook`, `instagram`, `tiktok`, `youtube` | Yes |
 | `--tags` | - | Tags/hashtags (can be repeated) | No |
 | `--env` | - | Path to .env file (default: `.env`) | No |
-| `--profile` | - | Account profile to use (e.g., 'work', 'personal') | No |
 
 ### Output Format
 

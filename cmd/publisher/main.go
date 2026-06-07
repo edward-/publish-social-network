@@ -32,7 +32,6 @@ var (
 	flagPlatforms string
 	flagTags      []string
 	flagEnvPath   string
-	flagProfile   string
 )
 
 func main() {
@@ -59,7 +58,6 @@ func main() {
 	publishCmd.Flags().StringVarP(&flagPlatforms, "platforms", "p", "", "Comma-separated list of platforms: facebook,instagram,tiktok,youtube")
 	publishCmd.Flags().StringSliceVar(&flagTags, "tags", []string{}, "Tags/hashtags (can be specified multiple times)")
 	publishCmd.Flags().StringVar(&flagEnvPath, "env", ".env", "Path to .env file")
-	publishCmd.Flags().StringVar(&flagProfile, "profile", "", "Account profile to use (e.g., 'work', 'personal')")
 
 	// Mark required flags
 	publishCmd.MarkFlagRequired("caption")
@@ -76,7 +74,6 @@ This command implements TikTok's Login Kit for Desktop using PKCE authorization 
 		RunE: runTikTokLogin,
 	}
 	tiktokLoginCmd.Flags().StringVar(&flagEnvPath, "env", ".env", "Path to .env file")
-	tiktokLoginCmd.Flags().StringVar(&flagProfile, "profile", "", "Account profile to save token (e.g., 'work', 'personal')")
 	tiktokLoginCmd.Flags().String("redirect-uri", "http://localhost:8989", "OAuth redirect URI (must match TikTok app config)")
 
 	rootCmd.AddCommand(tiktokLoginCmd)
@@ -90,7 +87,6 @@ This command implements Facebook's OAuth 2.0 flow for user authentication.`,
 		RunE: runFacebookLogin,
 	}
 	facebookLoginCmd.Flags().StringVar(&flagEnvPath, "env", ".env", "Path to .env file")
-	facebookLoginCmd.Flags().StringVar(&flagProfile, "profile", "", "Account profile to save token (e.g., 'work', 'personal')")
 
 	rootCmd.AddCommand(facebookLoginCmd)
 
@@ -103,7 +99,6 @@ This command implements Google's OAuth 2.0 flow for YouTube API access.`,
 		RunE: runYouTubeLogin,
 	}
 	youtubeLoginCmd.Flags().StringVar(&flagEnvPath, "env", ".env", "Path to .env file")
-	youtubeLoginCmd.Flags().StringVar(&flagProfile, "profile", "", "Account profile to save token (e.g., 'work', 'personal')")
 
 	rootCmd.AddCommand(youtubeLoginCmd)
 
@@ -126,7 +121,7 @@ func runPublish(cmd *cobra.Command, args []string) error {
 	mediaType := parseMediaType(flagType)
 
 	// Load and validate configuration
-	cfg, err := config.Load(flagEnvPath, flagProfile)
+	cfg, err := config.Load(flagEnvPath)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -252,7 +247,7 @@ func printResults(results map[domain.Platform]domain.Result) {
 // runTikTokLogin handles the TikTok OAuth login flow.
 func runTikTokLogin(cmd *cobra.Command, args []string) error {
 	// Load config to get client key
-	cfg, err := config.Load(flagEnvPath, flagProfile)
+	cfg, err := config.Load(flagEnvPath)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -336,7 +331,7 @@ func runTikTokLogin(cmd *cobra.Command, args []string) error {
 
 	// Save to .env file
 	envPath, _ := cmd.Flags().GetString("env")
-	if err := saveTikTokToken(envPath, flagProfile, tokenInfo.AccessToken, tokenInfo.RefreshToken); err != nil {
+	if err := saveTikTokToken(envPath, tokenInfo.AccessToken, tokenInfo.RefreshToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 
@@ -345,12 +340,7 @@ func runTikTokLogin(cmd *cobra.Command, args []string) error {
 }
 
 // saveTikTokToken saves the TikTok token to the .env file.
-func saveTikTokToken(envPath, profile, accessToken, refreshToken string) error {
-	keySuffix := ""
-	if profile != "" && profile != "default" {
-		keySuffix = "_" + strings.ToUpper(profile)
-	}
-
+func saveTikTokToken(envPath, accessToken, refreshToken string) error {
 	// Read existing .env file if it exists
 	var lines []string
 	if data, err := os.ReadFile(envPath); err == nil {
@@ -358,8 +348,8 @@ func saveTikTokToken(envPath, profile, accessToken, refreshToken string) error {
 	}
 
 	// Update or add TIKTOK_ACCESS_TOKEN line
-	accessTokenKey := "TIKTOK_ACCESS_TOKEN" + keySuffix
-	refreshTokenKey := "TIKTOK_REFRESH_TOKEN" + keySuffix
+	accessTokenKey := "TIKTOK_ACCESS_TOKEN"
+	refreshTokenKey := "TIKTOK_REFRESH_TOKEN"
 
 	foundAccess := false
 	foundRefresh := false
@@ -422,7 +412,7 @@ func runCommand(name string, args ...string) error {
 // runFacebookLogin handles the Facebook OAuth login flow.
 func runFacebookLogin(cmd *cobra.Command, args []string) error {
 	// Load config to get client ID and secret
-	cfg, err := config.Load(flagEnvPath, flagProfile)
+	cfg, err := config.Load(flagEnvPath)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -496,7 +486,7 @@ func runFacebookLogin(cmd *cobra.Command, args []string) error {
 
 	// Save to .env file
 	envPath, _ := cmd.Flags().GetString("env")
-	if err := saveFacebookToken(envPath, flagProfile, tokenInfo.AccessToken); err != nil {
+	if err := saveFacebookToken(envPath, tokenInfo.AccessToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 
@@ -505,12 +495,7 @@ func runFacebookLogin(cmd *cobra.Command, args []string) error {
 }
 
 // saveFacebookToken saves the Facebook token to the .env file.
-func saveFacebookToken(envPath, profile, accessToken string) error {
-	keySuffix := ""
-	if profile != "" && profile != "default" {
-		keySuffix = "_" + strings.ToUpper(profile)
-	}
-
+func saveFacebookToken(envPath, accessToken string) error {
 	// Read existing .env file if it exists
 	var lines []string
 	if data, err := os.ReadFile(envPath); err == nil {
@@ -518,7 +503,7 @@ func saveFacebookToken(envPath, profile, accessToken string) error {
 	}
 
 	// Update or add FACEBOOK_ACCESS_TOKEN line
-	tokenKey := "FACEBOOK_ACCESS_TOKEN" + keySuffix
+	tokenKey := "FACEBOOK_ACCESS_TOKEN"
 
 	found := false
 	for i, line := range lines {
@@ -539,7 +524,7 @@ func saveFacebookToken(envPath, profile, accessToken string) error {
 // runYouTubeLogin handles the YouTube OAuth login flow.
 func runYouTubeLogin(cmd *cobra.Command, args []string) error {
 	// Load config to get client ID and secret
-	cfg, err := config.Load(flagEnvPath, flagProfile)
+	cfg, err := config.Load(flagEnvPath)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -611,7 +596,7 @@ func runYouTubeLogin(cmd *cobra.Command, args []string) error {
 
 	// Save to .env file
 	envPath, _ := cmd.Flags().GetString("env")
-	if err := saveYouTubeToken(envPath, flagProfile, token.RefreshToken); err != nil {
+	if err := saveYouTubeToken(envPath, token.RefreshToken); err != nil {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 
@@ -620,12 +605,7 @@ func runYouTubeLogin(cmd *cobra.Command, args []string) error {
 }
 
 // saveYouTubeToken saves the YouTube refresh token to the .env file.
-func saveYouTubeToken(envPath, profile, refreshToken string) error {
-	keySuffix := ""
-	if profile != "" && profile != "default" {
-		keySuffix = "_" + strings.ToUpper(profile)
-	}
-
+func saveYouTubeToken(envPath, refreshToken string) error {
 	// Read existing .env file if it exists
 	var lines []string
 	if data, err := os.ReadFile(envPath); err == nil {
@@ -633,7 +613,7 @@ func saveYouTubeToken(envPath, profile, refreshToken string) error {
 	}
 
 	// Update or add YOUTUBE_REFRESH_TOKEN line
-	tokenKey := "YOUTUBE_REFRESH_TOKEN" + keySuffix
+	tokenKey := "YOUTUBE_REFRESH_TOKEN"
 
 	found := false
 	for i, line := range lines {

@@ -79,7 +79,6 @@ This produces a `publisher` binary.
 | `--type` | string | Media type: `image`, `video`, `text` (default: `text`) |
 | `--tags` | string[] | Tags/hashtags (can repeat: `--tags golang --tags dev`) |
 | `--env` | string | Path to .env file (default: `.env`) |
-| `--profile` | string | Account profile to use (e.g., 'work', 'personal') |
 
 ### Example Invocations
 
@@ -229,37 +228,6 @@ cp .env.example .env
 | YouTube | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN` |
 
 **Note on TikTok/Instagram auth**: These platforms require browser-based OAuth consent flows. See `README.md` for manual token exchange instructions.
-
-### Multi-Account Support
-
-Configure multiple accounts per platform using profile suffixes:
-
-| Platform | Base Keys | With `--profile=work` |
-|----------|-----------|----------------------|
-| Facebook | `FACEBOOK_PAGE_ID`, `FACEBOOK_ACCESS_TOKEN` | `FACEBOOK_PAGE_ID_WORK`, `FACEBOOK_ACCESS_TOKEN_WORK` |
-| Instagram | `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` | `INSTAGRAM_USER_ID_WORK`, `INSTAGRAM_ACCESS_TOKEN_WORK` |
-| TikTok | `TIKTOK_ACCESS_TOKEN`, `TIKTOK_CLIENT_KEY` | `TIKTOK_ACCESS_TOKEN_WORK`, `TIKTOK_CLIENT_KEY_WORK` |
-| YouTube | `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN` | `YOUTUBE_CLIENT_ID_WORK`, etc. |
-
-Example `.env`:
-```bash
-# Default account
-FACEBOOK_PAGE_ID=default_id
-FACEBOOK_ACCESS_TOKEN=default_token
-
-# Work account
-FACEBOOK_PAGE_ID_WORK=work_id
-FACEBOOK_ACCESS_TOKEN_WORK=work_token
-```
-
-Usage:
-```bash
-# Use default account
-./publisher publish --caption "Hello!" --platforms facebook
-
-# Use work account
-./publisher publish --caption "Hello from work!" --platforms facebook --profile work
-```
 
 ---
 
